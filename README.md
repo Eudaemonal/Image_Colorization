@@ -1,6 +1,12 @@
 Image Colorization
 
-Link to Reference:
-https://github.com/nilboy/colorization-tf 
+How to use:
+Put the following in one folder
 
-https://github.com/pavelgonchar/colornet
+vgg16-20160129.tfmodel
+train.py
+resized/...
+
+resized contains colored image for training
+
+run using: python train.py
