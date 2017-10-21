@@ -1,15 +1,12 @@
 
 
 
-Put the following in one folder
+
 
 vgg16-20160129.tfmodel
 train.py
 resized/...
 
-resized contains colored image for training
-
-run using: python train.py
 
 
 # Image Colorization
@@ -21,21 +18,20 @@ One Paragraph of project description goes here
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+
+#### Building training environment
+
+Putting the following in one folder
 
 ```
-Give examples
+* vgg16-20160129.tfmodel
+* train.py
+* 
+* images/...
 ```
 
-### Installing
 
-A step by step series of examples that tell you have to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
+### Training
 
 #### Resizing
 
@@ -45,15 +41,6 @@ python3 -m dataset.resize <args>
 
 Use `-h` to see the available options
 
-
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
