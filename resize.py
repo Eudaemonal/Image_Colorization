@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from resizeimage import resizeimage
 
-from dataset.shared import maybe_create_folder
+from shared import maybe_create_folder
 
 
 class ImagenetResizer:
@@ -54,10 +54,10 @@ class ImagenetResizer:
 
 
 # Run from the top folder as:
-# python3 -m dataset.resize <args>
+# python3 -m resize <args>
 if __name__ == '__main__':
     import argparse
-    from dataset.shared import dir_originals, dir_resized
+    from shared import dir_originals, dir_resized
 
     # Argparse setup
     parser = argparse.ArgumentParser(

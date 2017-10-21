@@ -5,11 +5,21 @@ import glob
 import sys
 from matplotlib import pyplot as plt
 
+# image sources
+filenames = glob.glob("resized/*")
+
+with open("vgg16-20160129.tfmodel", mode='rb') as f:
+    fileContent = f.read()
+graph_def = tf.GraphDef()
+graph_def.ParseFromString(fileContent)
+
+if not os.path.exists('summary'):
+    os.mkdir('summary')
 
 
 def rgb2yuv(rgb):
     """ 
-    Convert RGB image into YUV
+    Convert RGB image into YUV 
     """
     rgb2yuv_filter = tf.constant([[[[0.299, -0.169, 0.499],
                                     [0.587, -0.331, -0.418],
@@ -109,6 +119,21 @@ def input_pipeline(filenames, batch_size, num_epochs=None):
     return example_batch
 
 
+batch_size = 1
+num_epochs = 1e+9
+colorimage = input_pipeline(filenames, batch_size, num_epochs=num_epochs)
+grayscale = tf.image.rgb_to_grayscale(colorimage)
+grayscale_rgb = tf.image.grayscale_to_rgb(grayscale)
+grayscale_yuv = rgb2yuv(grayscale_rgb)
+grayscale = tf.concat([grayscale, grayscale, grayscale],3)
+
+
+tf.import_graph_def(graph_def, input_map={"images": grayscale})
+graph = tf.get_default_graph()
+
+phase_train = tf.placeholder(tf.bool, name='phase_train')
+
+
 
 def color_net():
     with tf.variable_scope('vgg'):
@@ -183,6 +208,9 @@ def color_net():
     return conv6
 
 
+uv = tf.placeholder(tf.uint8, name='uv')
+
+checkpoints_dir = "./checkpoints"
 # train neural networks
 def train_color_net():
     pred = color_net()
@@ -234,7 +262,7 @@ def train_color_net():
             if step % 100000 == 400:
                 if not os.path.exists(checkpoints_dir):
                     os.makedirs(checkpoints_dir)
-                save_path = saver.save(sess, checkpoints_dir + "color_net_model"+str(step)+".ckpt")
+                save_path = saver.save(sess, checkpoints_dir + "/color_net_model"+str(step)+".ckpt")
                 print("Model saved in file: %s" % save_path)
 
     except tf.errors.OutOfRangeError:
@@ -247,39 +275,5 @@ def train_color_net():
     coord.join(threads)
     sess.close()
 
-
-
-
-
-# image sources
-filenames = glob.glob("resized/*")
-
-with open("vgg16-20160129.tfmodel", mode='rb') as f:
-    fileContent = f.read()
-graph_def = tf.GraphDef()
-graph_def.ParseFromString(fileContent)
-
-if not os.path.exists('summary'):
-    os.mkdir('summary')
-
-
-batch_size = 1
-num_epochs = 1e+9
-colorimage = input_pipeline(filenames, batch_size, num_epochs=num_epochs)
-grayscale = tf.image.rgb_to_grayscale(colorimage)
-grayscale_rgb = tf.image.grayscale_to_rgb(grayscale)
-grayscale_yuv = rgb2yuv(grayscale_rgb)
-grayscale = tf.concat([grayscale, grayscale, grayscale],3)
-
-
-tf.import_graph_def(graph_def, input_map={"images": grayscale})
-graph = tf.get_default_graph()
-
-phase_train = tf.placeholder(tf.bool, name='phase_train')
-
-
-uv = tf.placeholder(tf.uint8, name='uv')
-
-checkpoints_dir = "./checkpoints"
 
 train_color_net()
