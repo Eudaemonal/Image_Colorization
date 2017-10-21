@@ -1,17 +1,6 @@
 
-
-
-
-
-vgg16-20160129.tfmodel
-train.py
-resized/...
-
-
-
 # Image Colorization
 
-One Paragraph of project description goes here
 
 ## Getting Started
 
@@ -26,10 +15,15 @@ Putting the following in one folder
 ```
 * vgg16-20160129.tfmodel
 * train.py
-* 
+* resize.py
+* shared.py
 * images/...
+* resized/...
 ```
 
+The images/... folder will contain .jpg images for training, it can be any color image that you downloaded.
+
+The resized/... folder will be an empty folder to store resized image for training
 
 ### Training
 
@@ -40,6 +34,20 @@ python3 -m dataset.resize <args>
 ```
 
 Use `-h` to see the available options
+
+In our example
+
+```bash
+python3 -m dataset.resize -s images -o resized
+```
+
+#### Training
+
+Train the neural network
+
+```bash
+python3 train.py
+```
 
 
 ## Running the tests
