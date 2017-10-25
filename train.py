@@ -191,6 +191,8 @@ def color_net():
 
 # train neural networks
 def train_color_net():
+    pred_rgb = tf.placeholder(tf.float32, name="pred_rgb")
+
     pred = color_net()
     pred_yuv = tf.concat([tf.split(grayscale_yuv, 3, 3)[0], pred],3)
     pred_rgb = yuv2rgb(pred_yuv)

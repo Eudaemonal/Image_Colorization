@@ -67,11 +67,11 @@ class ConvolutionalBatchNormalizer(object):
 
 
 def batch_norm(x, depth, phase_train):
-    with tf.variable_scope('batchnorm'):
-        ewma = tf.train.ExponentialMovingAverage(decay=0.9999)
-        bn = ConvolutionalBatchNormalizer(depth, 0.001, ewma, True)
-        update_assignments = bn.get_assigner()
-        x = bn.normalize(x, train=phase_train)
+    #with tf.variable_scope('batchnorm'):
+    ewma = tf.train.ExponentialMovingAverage(decay=0.9999)
+    bn = ConvolutionalBatchNormalizer(depth, 0.001, ewma, True)
+    update_assignments = bn.get_assigner()
+    x = bn.normalize(x, train=phase_train)
     return x
 
 def conv2d(_X, w, sigmoid=False, bn=False):
@@ -265,36 +265,23 @@ if __name__ == "__main__":
     grayscale_yuv = rgb2yuv(grayscale_rgb)
     grayscale = tf.concat([grayscale, grayscale, grayscale],3)
 
-    
     tf.import_graph_def(graph_def, input_map={"images": grayscale})
     graph = tf.get_default_graph()
+    #phase_train = tf.placeholder(tf.bool, name='phase_train')
+    #uv = tf.placeholder(tf.uint8, name='uv')
 
-    phase_train = tf.placeholder(tf.bool, name='phase_train')
-    uv = tf.placeholder(tf.uint8, name='uv')
-
-    pred = color_net()
-    pred_yuv = tf.concat([tf.split(grayscale_yuv, 3, 3)[0], pred],3)
-    pred_rgb = yuv2rgb(pred_yuv)
-    colorimage_yuv = rgb2yuv(colorimage)
-
-    """
-    loss = tf.square(tf.subtract(pred, tf.concat([tf.split(colorimage_yuv, 3, 3)[1], tf.split(colorimage_yuv, 3, 3)[2]],3)))
-    """
+   
+    # Saver.
     #saver = tf.train.Saver()
-
-    
     with tf.Session() as sess:
-        saver = tf.train.import_meta_graph('checkpoints/color_net_model200400.ckpt.meta')
-        saver.restore(sess, "checkpoints/color_net_model200400.ckpt")
-        pred_, pred_rgb_, colorimage_, grayscale_rgb_, cost = sess.run(
-                    [pred, pred_rgb, colorimage, grayscale_rgb, loss], feed_dict={phase_train: False, uv: 3})
 
+        saver = tf.train.import_meta_graph('checkpoints/color_net_model400.ckpt.meta')
+        saver.restore(sess, "checkpoints/color_net_model400.ckpt")
+
+
+
+        pred_rgb_ = sess.run(["pred_rgb:0"], feed_dict={"phase_train:0": False, "uv:0": 3})
+        
+        print("Image saved")
         plt.imsave("demo/color.jpg", pred_rgb_[0])
 
-'''
-    tf.import_graph_def(graph_def, input_map={"images": grayscale})
-    graph = tf.get_default_graph()
-    phase_train = tf.placeholder(tf.bool, name='phase_train')
-    uv = tf.placeholder(tf.uint8, name='uv')
-
-'''
