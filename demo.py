@@ -6,6 +6,86 @@ import sys
 from matplotlib import pyplot as plt
 
 
+
+def read_my_file_format(filename_queue, randomize=False):
+    reader = tf.WholeFileReader()
+    key, file = reader.read(filename_queue)
+    uint8image = tf.image.decode_jpeg(file, channels=3)
+    uint8image = tf.random_crop(uint8image, (224, 224, 3))
+    if randomize:
+        uint8image = tf.image.random_flip_left_right(uint8image)
+        uint8image = tf.image.random_flip_up_down(uint8image, seed=None)
+    float_image = tf.div(tf.cast(uint8image, tf.float32), 255)
+    return float_image
+
+
+def input_pipeline(filenames, batch_size, num_epochs=None):
+    filename_queue = tf.train.string_input_producer(filenames, num_epochs=num_epochs, shuffle=False)
+    example = read_my_file_format(filename_queue, randomize=False)
+    min_after_dequeue = 100
+    capacity = min_after_dequeue + 3 * batch_size
+    example_batch = tf.train.shuffle_batch([example], batch_size=batch_size, capacity=capacity,
+                                           min_after_dequeue=min_after_dequeue)
+    return example_batch
+
+
+
+class ConvolutionalBatchNormalizer(object):
+    """ 
+    Helper class that groups the normalization logic and variables.        .                               
+    """
+
+    def __init__(self, depth, epsilon, ewma_trainer, scale_after_norm):
+        self.mean = tf.Variable(tf.constant(0.0, shape=[depth]), trainable=False)
+        self.variance = tf.Variable(tf.constant(1.0, shape=[depth]), trainable=False)
+        self.beta = tf.Variable(tf.constant(0.0, shape=[depth]))
+        self.gamma = tf.Variable(tf.constant(1.0, shape=[depth]))
+        self.ewma_trainer = ewma_trainer
+        self.epsilon = epsilon
+        self.scale_after_norm = scale_after_norm
+
+    def get_assigner(self):
+        """Returns an EWMA apply op that must be invoked after optimization."""
+        return self.ewma_trainer.apply([self.mean, self.variance])
+
+    def normalize(self, x, train=True):
+        """Returns a batch-normalized version of x."""
+        if train is not None:
+            mean, variance = tf.nn.moments(x, [0, 1, 2])
+            assign_mean = self.mean.assign(mean)
+            assign_variance = self.variance.assign(variance)
+            with tf.control_dependencies([assign_mean, assign_variance]):
+                return tf.nn.batch_norm_with_global_normalization(x, mean, variance, self.beta, self.gamma,
+                                                                  self.epsilon, self.scale_after_norm)
+        else:
+            mean = self.ewma_trainer.average(self.mean)
+            variance = self.ewma_trainer.average(self.variance)
+            local_beta = tf.identity(self.beta)
+            local_gamma = tf.identity(self.gamma)
+            return tf.nn.batch_norm_with_global_normalization(x, mean, variance, local_beta, local_gamma, self.epsilon,
+                                                              self.scale_after_norm)
+
+
+def batch_norm(x, depth, phase_train):
+    with tf.variable_scope('batchnorm'):
+        ewma = tf.train.ExponentialMovingAverage(decay=0.9999)
+        bn = ConvolutionalBatchNormalizer(depth, 0.001, ewma, True)
+        update_assignments = bn.get_assigner()
+        x = bn.normalize(x, train=phase_train)
+    return x
+
+def conv2d(_X, w, sigmoid=False, bn=False):
+    with tf.variable_scope('conv2d'):
+        _X = tf.nn.conv2d(_X, w, [1, 1, 1, 1], 'SAME')
+        if bn:
+            _X = batch_norm(_X, w.get_shape()[3], phase_train)
+        if sigmoid:
+            return tf.sigmoid(_X)
+        else:
+            _X = tf.nn.relu(_X)
+            return tf.maximum(0.01 * _X, _X)
+
+
 def rgb2yuv(rgb):
     """ 
     Convert RGB image into YUV 
@@ -34,6 +114,19 @@ def yuv2rgb(yuv):
     temp = tf.minimum(temp, tf.multiply(tf.ones(temp.get_shape(), dtype=tf.float32), 255))
     temp = tf.div(temp, 255)
     return temp
+
+def concat_images(imga, imgb):
+    """ 
+    Combines two color image ndarrays side-by-side. 
+    """
+    ha, wa = imga.shape[:2]
+    hb, wb = imgb.shape[:2]
+    max_height = np.max([ha, hb])
+    total_width = wa + wb
+    new_img = np.zeros(shape=(max_height, total_width, 3), dtype=np.float32)
+    new_img[:ha, :wa] = imga
+    new_img[:hb, wa:wa + wb] = imgb
+    return new_img
 
 
 def color_net():
@@ -157,12 +250,51 @@ def train_color_net():
 
 
 if __name__ == "__main__":
-
-    img = cv2.imread('gray.jpg')
-    if len(img.shape) == 3:
-        img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-
+    #filenames='demo/gray.jpg'
+    filenames = glob.glob("demo/*")
     with open("vgg16-20160129.tfmodel", mode='rb') as f:
         fileContent = f.read()
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(fileContent)
+
+    batch_size = 1
+    num_epochs = 1e+9
+    colorimage = input_pipeline(filenames, batch_size, num_epochs=num_epochs)
+    grayscale = tf.image.rgb_to_grayscale(colorimage)
+    grayscale_rgb = tf.image.grayscale_to_rgb(grayscale)
+    grayscale_yuv = rgb2yuv(grayscale_rgb)
+    grayscale = tf.concat([grayscale, grayscale, grayscale],3)
+
+    
+    tf.import_graph_def(graph_def, input_map={"images": grayscale})
+    graph = tf.get_default_graph()
+
+    phase_train = tf.placeholder(tf.bool, name='phase_train')
+    uv = tf.placeholder(tf.uint8, name='uv')
+
+    pred = color_net()
+    pred_yuv = tf.concat([tf.split(grayscale_yuv, 3, 3)[0], pred],3)
+    pred_rgb = yuv2rgb(pred_yuv)
+    colorimage_yuv = rgb2yuv(colorimage)
+
+    """
+    loss = tf.square(tf.subtract(pred, tf.concat([tf.split(colorimage_yuv, 3, 3)[1], tf.split(colorimage_yuv, 3, 3)[2]],3)))
+    """
+    #saver = tf.train.Saver()
+
+    
+    with tf.Session() as sess:
+        saver = tf.train.import_meta_graph('checkpoints/color_net_model200400.ckpt.meta')
+        saver.restore(sess, "checkpoints/color_net_model200400.ckpt")
+        pred_, pred_rgb_, colorimage_, grayscale_rgb_, cost = sess.run(
+                    [pred, pred_rgb, colorimage, grayscale_rgb, loss], feed_dict={phase_train: False, uv: 3})
+
+        plt.imsave("demo/color.jpg", pred_rgb_[0])
+
+'''
+    tf.import_graph_def(graph_def, input_map={"images": grayscale})
+    graph = tf.get_default_graph()
+    phase_train = tf.placeholder(tf.bool, name='phase_train')
+    uv = tf.placeholder(tf.uint8, name='uv')
+
+'''
