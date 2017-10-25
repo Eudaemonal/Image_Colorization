@@ -191,8 +191,6 @@ def color_net():
 
 # train neural networks
 def train_color_net():
-    pred_rgb = tf.placeholder(tf.float32, name="pred_rgb")
-
     pred = color_net()
     pred_yuv = tf.concat([tf.split(grayscale_yuv, 3, 3)[0], pred],3)
     pred_rgb = yuv2rgb(pred_yuv)
@@ -239,7 +237,7 @@ def train_color_net():
                     summary_image = concat_images(summary_image, colorimage_[0])
                     plt.imsave("summary/" + str(step) + "_0.jpg", summary_image)
 
-            if step % 100000 == 400:
+            if step % 100000 == 500:
                 if not os.path.exists(checkpoints_dir):
                     os.makedirs(checkpoints_dir)
                 save_path = saver.save(sess, checkpoints_dir + "/color_net_model"+str(step)+".ckpt")
@@ -285,3 +283,4 @@ if __name__ == "__main__":
     checkpoints_dir = "./checkpoints"
 
     train_color_net()
+

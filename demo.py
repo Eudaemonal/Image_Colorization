@@ -265,6 +265,7 @@ if __name__ == "__main__":
     grayscale_yuv = rgb2yuv(grayscale_rgb)
     grayscale = tf.concat([grayscale, grayscale, grayscale],3)
 
+    
     tf.import_graph_def(graph_def, input_map={"images": grayscale})
     graph = tf.get_default_graph()
     #phase_train = tf.placeholder(tf.bool, name='phase_train')
@@ -274,14 +275,17 @@ if __name__ == "__main__":
     # Saver.
     #saver = tf.train.Saver()
     with tf.Session() as sess:
-
         saver = tf.train.import_meta_graph('checkpoints/color_net_model400.ckpt.meta')
         saver.restore(sess, "checkpoints/color_net_model400.ckpt")
 
-
-
+        pred_rgb_ = tf.placeholder(dtype=tf.float32)
         pred_rgb_ = sess.run(["pred_rgb:0"], feed_dict={"phase_train:0": False, "uv:0": 3})
         
+
+
+
+
+
         print("Image saved")
         plt.imsave("demo/color.jpg", pred_rgb_[0])
 
