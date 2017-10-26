@@ -13,17 +13,18 @@
 Putting the following in one folder
 
 ```
-* vgg16-20160129.tfmodel
 * train.py
 * resize.py
-* shared.py
 * images/...
 * resized/...
+* model/vgg16-20160129.tfmodel
 ```
 
 The images/... folder will contain .jpg images for training, it can be any color image that you downloaded.
 
 The resized/... folder will be an empty folder to store resized image for training
+
+The model/... folder will contain the file vgg16-20160129.tfmodel, which can be found on google
 
 ### Training
 
