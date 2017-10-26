@@ -1,4 +1,4 @@
-import tensorflow as tf  # 0.12  
+import tensorflow as tf  # 0.13 
 import numpy as np
 import os
 import glob
