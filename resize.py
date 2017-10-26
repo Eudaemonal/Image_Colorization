@@ -20,7 +20,7 @@ class ImagenetResizer:
         maybe_create_folder(dest_dir)
         self.dest_dir = dest_dir
 
-    def resize_img(self, filename: str, size: Tuple[int, int] = (299, 299)):
+    def resize_img(self, filename: str, size: Tuple[int, int] = (224, 224)):
         """
         Resizes the image using padding
         :param filename:
@@ -47,7 +47,7 @@ class ImagenetResizer:
         cover = resizeimage.resize_contain(img, size)
         cover.save(join(self.dest_dir, filename), 'JPEG')
 
-    def resize_all(self, size=(299, 299)):
+    def resize_all(self, size=(224, 224)):
         for filename in listdir(self.source_dir):
             if isfile(join(self.source_dir, filename)):
                 self.resize_img(filename, size)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # Argparse setup
     parser = argparse.ArgumentParser(
-        description='Resize images from a folder to 299x299')
+        description='Resize images from a folder to 224x224')
     parser.add_argument('-s', '--source-folder',
                         default=dir_originals,
                         type=str,
@@ -78,4 +78,4 @@ if __name__ == '__main__':
                         .format(dir_resized))
 
     args = parser.parse_args()
-    ImagenetResizer(args.source, args.output).resize_all((299, 299))
+    ImagenetResizer(args.source, args.output).resize_all((224, 224))

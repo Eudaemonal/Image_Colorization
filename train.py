@@ -54,7 +54,6 @@ class ConvolutionalBatchNormalizer(object):
     """ 
     Helper class that groups the normalization logic and variables.        .                               
     """
-
     def __init__(self, depth, epsilon, ewma_trainer, scale_after_norm):
         self.mean = tf.Variable(tf.constant(0.0, shape=[depth]), trainable=False)
         self.variance = tf.Variable(tf.constant(1.0, shape=[depth]), trainable=False)
@@ -155,7 +154,6 @@ def color_net():
     }
 
 
-
     with tf.variable_scope('color_net'):
         # Bx28x28x512 -> batch norm -> 1x1 conv = Bx28x28x256  
         conv1 = tf.nn.relu(tf.nn.conv2d(batch_norm(conv4_3, 512, phase_train), weights['wc1'], [1, 1, 1, 1], 'SAME'))
@@ -203,7 +201,7 @@ def train_color_net():
     elif uv == 2:
         loss = tf.split(loss, 2, 3)[1]
     else:
-        loss = (tf.split(loss,2, 3 )[0] + tf.split(loss,2, 3 )[1]) / 2
+        loss = (tf.split(loss,2, 3)[0] + tf.split(loss,2, 3)[1]) / 2
 
     global_step = tf.Variable(0, name='global_step', trainable=False)
     if phase_train is not None:
@@ -259,7 +257,7 @@ if __name__ == "__main__":
     # image sources
     filenames = glob.glob("resized/*")
 
-    with open("vgg16-20160129.tfmodel", mode='rb') as f:
+    with open("model/vgg16-20160129.tfmodel", mode='rb') as f:
         fileContent = f.read()
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(fileContent)
@@ -267,7 +265,7 @@ if __name__ == "__main__":
     if not os.path.exists('summary'):
         os.mkdir('summary')
 
-    batch_size = 1
+    batch_size = 4
     num_epochs = 1e+9
     colorimage = input_pipeline(filenames, batch_size, num_epochs=num_epochs)
     grayscale = tf.image.rgb_to_grayscale(colorimage)
