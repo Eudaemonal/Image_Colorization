@@ -55,6 +55,10 @@ python3 train.py
 Make sure you have folder resized/... containing the resized images for training, and folder model/... with the vgg16 model, Otherwise you may need to edit the path.
 
 
+#### Results
+
+The program will generate a folder summary/... , it contains the output image during training. 
+
 ## Built With
 
 * [Python 3.6.1](https://www.python.org/) - Programming platform
