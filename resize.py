@@ -5,9 +5,13 @@ from typing import Tuple
 import numpy as np
 from PIL import Image
 from resizeimage import resizeimage
+import itertools
+from os import makedirs
+from os.path import expanduser, join
 
-from shared import maybe_create_folder
 
+def maybe_create_folder(folder):
+    makedirs(folder, exist_ok=True)
 
 class ImagenetResizer:
     def __init__(self, source_dir: str, dest_dir: str):
