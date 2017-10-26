@@ -30,13 +30,15 @@ The model/... folder will contain the file vgg16-20160129.tfmodel, which can be 
 
 #### Resizing
 
+The original image need to be resized to size 224x224 for training
+
 ```bash
 python3 -m dataset.resize <args>
 ```
 
 Use `-h` to see the available options
 
-In our example
+In our example:
 
 ```bash
 python3 -m dataset.resize -s images -o resized
@@ -44,63 +46,18 @@ python3 -m dataset.resize -s images -o resized
 
 #### Training
 
-Train the neural network
+Train the neural network:
 
 ```bash
 python3 train.py
 ```
 
+Make sure you have folder resized/... containing the resized images for training, and folder model/... with the vgg16 model, Otherwise you may need to edit the path.
 
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
 
 ## Built With
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [Python 3.6.1](https://www.python.org/) - Programming platform
+* [Tensorflow 1.3.0](https://www.tensorflow.org/) - Package for building neural network
 
-## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
