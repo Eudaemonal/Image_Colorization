@@ -265,7 +265,7 @@ if __name__ == "__main__":
     if not os.path.exists('summary'):
         os.mkdir('summary')
 
-    batch_size = 4
+    batch_size = 8
     num_epochs = 1e+9
     colorimage = input_pipeline(filenames, batch_size, num_epochs=num_epochs)
     grayscale = tf.image.rgb_to_grayscale(colorimage)
