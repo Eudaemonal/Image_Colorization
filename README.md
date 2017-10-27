@@ -13,8 +13,12 @@
 Putting the following in one folder
 
 ```
+* demo.py
+* net.py
+* normalize.py
 * train.py
 * resize.py
+* utils.py
 * images/...
 * resized/...
 * model/vgg16-20160129.tfmodel

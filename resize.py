@@ -39,15 +39,9 @@ class ImagenetResizer:
         ratio_w, ratio_h = wanted_width / width, wanted_height / height
 
         if np.alltrue(ratios > 1):
-            # Both sides of the image are shorter than the desired dimension,
-            # so take the side that's closer in size and enlarge the image
-            # in both directions to make that one fit
             factor = min(ratio_h, ratio_w)
             img = img.resize((int(width * factor), int(height * factor)))
 
-        # Now we have an image that's either larger than the desired shape
-        # or at least one side matches the desired shape and we can resize
-        # with contain
         cover = resizeimage.resize_contain(img, size)
         cover.save(join(self.dest_dir, filename), 'JPEG')
 
