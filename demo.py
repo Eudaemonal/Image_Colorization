@@ -11,7 +11,7 @@ from net import color_net
 
 if __name__ == "__main__":
     filenames = glob.glob("demo/*")
-    with open("vgg16-20160129.tfmodel", mode='rb') as f:
+    with open("model/vgg16-20160129.tfmodel", mode='rb') as f:
         fileContent = f.read()
     graph_def = tf.GraphDef()
     graph_def.ParseFromString(fileContent)

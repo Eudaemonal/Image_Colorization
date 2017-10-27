@@ -11,6 +11,7 @@ from net import color_net
 
 # train neural networks
 def train_color_net(graph, phase_train, uv, grayscale):
+    pred_rgb = tf.placeholder(tf.float32, name="pred_rgb")
     pred = color_net(graph, phase_train, grayscale)
     pred_yuv = tf.concat([tf.split(grayscale_yuv, 3, 3)[0], pred],3)
     pred_rgb = yuv2rgb(pred_yuv)
